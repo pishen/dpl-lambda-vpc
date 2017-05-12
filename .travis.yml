@@ -1,0 +1,30 @@
+sudo: false
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+before_cache:
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
+script:
+  - sbt assembly
+deploy:
+  provider: lambda
+  edge:
+    source: pishen/dpl
+    branch: vpc-config
+  skip_cleanup: true
+  access_key_id: $AWS_ACCESS_KEY_ID
+  secret_access_key: $AWS_SECRET_ACCESS_KEY
+  region: "ap-northeast-1"
+  role: "arn:aws:iam::312530604583:role/kktv-test-lambda-vpc-basic"
+  function_name: "dpl-lambda-vpc"
+  runtime: "java8"
+  handler_name: "kktv.Main::run"
+  timeout: 300
+  memory_size: 1536
+  zip: "target/scala-2.11/lambda.zip"
+  subnet_ids: ["subnet-21f3a478", "subnet-241b2553"]
+  security_group_ids: ["sg-30aa0754"]
+  on:
+    all_branches: true
